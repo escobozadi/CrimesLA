@@ -1,4 +1,7 @@
-# Data Analysis Course Project
+"""
+    Data Analysis Course Project
+Analysing DataFrame: Crimes in LA from 2020 to July 2023
+"""
 
 import pandas as pd
 import numpy as np
@@ -14,6 +17,7 @@ def format_file(path):
 
 
 def map_locations(df):
+    # Mapping crime locations in LA map image
     box = (df.LON.min(), df.LON[df.LON != 0].max(),
            df.LAT[df.LAT != 0].min(), df.LAT.max())
     print(box)
