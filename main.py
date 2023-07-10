@@ -16,6 +16,33 @@ def format_file(path):
     return df
 
 
+def format_mocodes(path):
+    # Formatting MO_CODES_Numerical_20191119.csv
+    motives = pd.DataFrame(pd.read_csv(path, header=0, names=["code", "modus operandi", "further description"]))
+
+    # Separating T/C - 'Description' into two columns
+    tmp = motives.loc[motives["modus operandi"].str.startswith("T/C"), "modus operandi"]    # locating rows with T/C
+    # Keeping T/C on column 'modus operandi'
+    motives.loc[motives["modus operandi"].str.startswith("T/C"), "modus operandi"] = "T/C"
+    # Moving 'Description' into 'further description column
+    motives.loc[motives["modus operandi"].str.startswith("T/C"), "further description"] = tmp.str[5:]
+
+    # Separating SSI - 'Description' into two columns
+    tmp = motives.loc[motives["modus operandi"].str.startswith("SSI"), "modus operandi"]
+    motives.loc[motives["modus operandi"].str.startswith("SSI"), "modus operandi"] = "SSI"
+    motives.loc[motives["modus operandi"].str.startswith("SSI"), "further description"] = tmp.str[5:]
+
+    # Adding new column, True/False whether the description mentions there's a victim
+    motives["victim"] = motives["modus operandi"].str.contains("Victim|victim|victims|Victims|vict|Vict")
+
+    # victim = motives["modus operandi"].str.contains(["Victim|victim|victims|Victims|vict|Vict"])
+    # suspect = motives["modus operandi"].str.contains(["Suspect|suspect|Susp|susp|susps"])
+    # motives["vict/susp"] = list(map(lambda x: x.contains("Victim"), motives["modus operandi"]))
+    motives.to_csv(path)
+
+    return
+
+
 def map_locations(df):
     # Mapping crime locations in LA map image
     box = (df.LON.min(), df.LON[df.LON != 0].max(),
@@ -41,10 +68,15 @@ if __name__ == '__main__':
     # DataFrame: Crimes in LA from 2020 to July 2023
     # 752910 entries
     file_path = "~/Documents/BedTracks/git_test/Crime_Data_from_2020_to_Present.csv"
-    dataframe = format_file(file_path)
+    mo_codes = "~/Documents/BedTracks/git_test/MO_CODES_Numerical_20191119.csv"
+    # dataframe = format_file(file_path)
 
-    pd.set_option("display.max_columns", len(dataframe))
-    print(dataframe.head())
-    map_locations(dataframe)
-    pd.reset_option("display.max_columns")
+    # MO CODES
+    format_mocodes(mo_codes)
+    # print(motives)
+
+    # pd.set_option("display.max_columns", len(dataframe))
+    # print(dataframe.head())
+    # map_locations(dataframe)
+    # pd.reset_option("display.max_columns")
 
