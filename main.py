@@ -62,27 +62,6 @@ def format_mocodes(path):
     return
 
 
-def map_locations(df):
-    # Mapping crime locations in LA map image
-    box = (df.LON.min(), df.LON[df.LON != 0].max(),
-           df.LAT[df.LAT != 0].min(), df.LAT.max())
-    print(box)
-
-    map_img = plt.imread("/Users/dianaescoboza/Documents/BedTracks/git_test/map.png")
-    fig, ax = plt.subplots(figsize=(8, 7))
-
-    ax.scatter(df.LON[df.LON != 0], df.LAT[df.LAT != 0],
-               zorder=1, alpha=0.1, c='b', s=0.8)
-    ax.set_title("Location of Crimes in LA from 2020 to July 2023")
-    ax.set_xlim(box[0], box[1])
-    ax.set_ylim(box[2], box[3])
-
-    ax.imshow(map_img, zorder=0, extent=box, aspect='equal')
-    plt.show()
-
-    return
-
-
 class Visualizations(object):
 
     def __init__(self, crime_df, mo_codes_df, descent_df):
@@ -92,18 +71,56 @@ class Visualizations(object):
 
     def gender_race(self):
         victims_sex = self.crime_df["Vict Sex"].value_counts()
-        fig, ax = plt.subplots(subplot_kw=dict(aspect="equal"))
+
+        victim_descent = pd.merge(self.crime_df, self.descent_df, how="left",
+                                  left_on="Vict Descent", right_on="Descent Code")[["Descent Code", "Description"]]
+        victims_descent = victim_descent["Description"].value_counts()
+
+        fig, (ax, ax2) = plt.subplots(1, 2, subplot_kw=dict(aspect="equal"))
         # ax.pie(victims_sex.values[:-2],
         #        labels=["Male", "Female", "Unknown"],
         #        autopct=lambda pct: viz.chart_percentage(pct, victims_sex.values[:-2]))
-        wedges, texts, autotexts = ax.pie(victims_sex.values[:-2],
-                                          autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p * np.sum(
-                                              victims_sex.values[:-2]) / 100)),
-                                          explode=[0.01, 0.01, 0.01])
-        plt.setp(autotexts, size=8, weight="bold")
+        wedges, _, autotexts = ax.pie(victims_sex.values[:-2],
+                                      autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p * np.sum(
+                                          victims_sex.values[:-2]) / 100)),
+                                      explode=[0.01, 0.01, 0.01])
+
+        wedges2, _, autotexts2 = ax2.pie(victims_descent.values,
+                                         autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p * np.sum(
+                                             victims_descent.values) / 100)) if p > 5 else None)
+
         ax.legend(wedges, ["Male", "Female", "Unknown"], title="Victim Gender",
                   loc="upper right", bbox_to_anchor=(0, 1))
+        ax2.legend(wedges2, labels=victims_descent.keys(), title="Victim Descent/Race",
+                   loc="upper left", bbox_to_anchor=(0.9, 1),
+                   fontsize="5")
+
         ax.set_title("Gender of Victim")
+        ax2.set_title("Descent/Race of Victim")
+
+        plt.setp(autotexts, size=8, weight="bold")
+        plt.setp(autotexts2, size=6, weight="bold")
+        plt.show()
+
+        return
+
+    def map_locations(self):
+        # Mapping crime locations in LA map image
+        df = self.crime_df
+        box = (df.LON.min(), df.LON[df.LON != 0].max(),
+               df.LAT[df.LAT != 0].min(), df.LAT.max())
+        print(box)
+
+        map_img = plt.imread("/Users/dianaescoboza/Documents/BedTracks/git_test/map.png")
+        fig, ax = plt.subplots(figsize=(8, 7))
+
+        ax.scatter(df.LON[df.LON != 0], df.LAT[df.LAT != 0],
+                   zorder=1, alpha=0.1, c='b', s=0.8)
+        ax.set_title("Location of Crimes in LA from 2020 to July 2023")
+        ax.set_xlim(box[0], box[1])
+        ax.set_ylim(box[2], box[3])
+
+        ax.imshow(map_img, zorder=0, extent=box, aspect='equal')
         plt.show()
 
         return
@@ -131,18 +148,11 @@ if __name__ == '__main__':
     # print(modus_operandi.head())
     # print(descent)
 
-    victims_sex = dataframe["Vict Sex"].value_counts()
-
-    fig, ax = plt.subplots(subplot_kw=dict(aspect="equal"))
-
-    wedges, texts, autotexts = ax.pie(victims_sex.values[:-2],
-                                      autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p*np.sum(victims_sex.values[:-2])/100)),
-                                      explode=[0.01, 0.01, 0.01])
-    plt.setp(autotexts, size=8, weight="bold")
-    ax.legend(wedges, ["Male", "Female", "Unknown"], title="Victim Gender",
-              loc="upper right", bbox_to_anchor=(0, 1))
-    ax.set_title("Gender of Victim")
-    # plt.show()
+    # victim_descent = pd.merge(dataframe, descent, how="left",
+    #                           left_on="Vict Descent", right_on="Descent Code")[["Descent Code", "Description"]]
+    #
+    # victims_sex = dataframe["Vict Sex"].value_counts()
+    # victims_descent = victim_descent["Description"].value_counts()
 
     # pd.set_option("display.max_columns", len(dataframe))
     # print(dataframe.head())
