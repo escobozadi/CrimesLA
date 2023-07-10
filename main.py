@@ -8,29 +8,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def format_file(path):
+def data_tables(path, mo_code=None):
     df = pd.DataFrame(pd.read_csv(path))
+    if mo_code:
+        df2 = pd.DataFrame(pd.read_csv(mo_code, index_col=0))
+    else:
+        df2 = None
 
     df["Date Rptd"] = pd.to_datetime(df["Date Rptd"], format='%m/%d/%Y %H:%M:%S %p')
     df["DATE OCC"] = pd.to_datetime(df["Date Rptd"])
-    return df
+
+    # Victims Descent/Race Codes and Values
+    df3 = pd.DataFrame({"Descent Code": ["A", "B", "C", "D", "F", "G", "H",
+                                         "I", "J", "K", "L", "O", "P", "S",
+                                         "U", "V", "W", "X", "Z"],
+                        "Description": ["Other Asian", "Black", "Chinese",
+                                        "Cambodian", "Filipino", "Guamanian",
+                                        "Hispanic/Latin/Mexican", "American Indian/Alaskan Native",
+                                        "Japanese", "Korean", "Laotian", "Other", "Pacific Islander",
+                                        "Samoan", "Hawaiian", "Vietnamese", "White", "Unknown",
+                                        "Asian Indian"]})
+
+    return df, df2, df3
 
 
 def format_mocodes(path):
     # Formatting MO_CODES_Numerical_20191119.csv
-    motives = pd.DataFrame(pd.read_csv(path, header=0, names=["code", "modus operandi", "further description"]))
+    motives = pd.DataFrame(pd.read_csv(path, header=0, names=["code", "modus operandi",
+                                                              "further description", "victim"]))
 
     # Separating T/C - 'Description' into two columns
     tmp = motives.loc[motives["modus operandi"].str.startswith("T/C"), "modus operandi"]    # locating rows with T/C
     # Keeping T/C on column 'modus operandi'
     motives.loc[motives["modus operandi"].str.startswith("T/C"), "modus operandi"] = "T/C"
     # Moving 'Description' into 'further description column
-    motives.loc[motives["modus operandi"].str.startswith("T/C"), "further description"] = tmp.str[5:]
+    if list(tmp) != list(motives.loc[motives["modus operandi"].str.startswith("T/C"), "modus operandi"]):
+        motives.loc[motives["modus operandi"].str.startswith("T/C"), "further description"] = tmp.str[5:]
 
     # Separating SSI - 'Description' into two columns
     tmp = motives.loc[motives["modus operandi"].str.startswith("SSI"), "modus operandi"]
     motives.loc[motives["modus operandi"].str.startswith("SSI"), "modus operandi"] = "SSI"
-    motives.loc[motives["modus operandi"].str.startswith("SSI"), "further description"] = tmp.str[5:]
+    if list(tmp) != list(motives.loc[motives["modus operandi"].str.startswith("SSI"), "modus operandi"]):
+        motives.loc[motives["modus operandi"].str.startswith("SSI"), "further description"] = tmp.str[5:]
 
     # Adding new column, True/False whether the description mentions there's a victim
     motives["victim"] = motives["modus operandi"].str.contains("Victim|victim|victims|Victims|vict|Vict")
@@ -64,16 +83,66 @@ def map_locations(df):
     return
 
 
+class Visualizations(object):
+
+    def __init__(self, crime_df, mo_codes_df, descent_df):
+        self.crime_df = crime_df
+        self.mo_codes = mo_codes_df
+        self.descent_df = descent_df
+
+    def gender_race(self):
+        victims_sex = self.crime_df["Vict Sex"].value_counts()
+        fig, ax = plt.subplots(subplot_kw=dict(aspect="equal"))
+        # ax.pie(victims_sex.values[:-2],
+        #        labels=["Male", "Female", "Unknown"],
+        #        autopct=lambda pct: viz.chart_percentage(pct, victims_sex.values[:-2]))
+        wedges, texts, autotexts = ax.pie(victims_sex.values[:-2],
+                                          autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p * np.sum(
+                                              victims_sex.values[:-2]) / 100)),
+                                          explode=[0.01, 0.01, 0.01])
+        plt.setp(autotexts, size=8, weight="bold")
+        ax.legend(wedges, ["Male", "Female", "Unknown"], title="Victim Gender",
+                  loc="upper right", bbox_to_anchor=(0, 1))
+        ax.set_title("Gender of Victim")
+        plt.show()
+
+        return
+
+    @staticmethod
+    def chart_percentage(pct, values):
+        val = int(np.round(pct/100.*np.sum(values)))
+        return f"{pct:.1f}% \n ({val:d})"
+
+
 if __name__ == '__main__':
     # DataFrame: Crimes in LA from 2020 to July 2023
     # 752910 entries
     file_path = "~/Documents/BedTracks/git_test/Crime_Data_from_2020_to_Present.csv"
     mo_codes = "~/Documents/BedTracks/git_test/MO_CODES_Numerical_20191119.csv"
-    # dataframe = format_file(file_path)
+    # Format csv of MO CODES
+    # format_mocodes(mo_codes)
 
-    # MO CODES
-    format_mocodes(mo_codes)
-    # print(motives)
+    # Read CSVs
+    dataframe, modus_operandi, descent = data_tables(file_path, mo_codes)
+    viz = Visualizations(dataframe, modus_operandi, descent)
+
+    pd.set_option("display.max_columns", len(dataframe))
+    print(dataframe.head())
+    # print(modus_operandi.head())
+    # print(descent)
+
+    victims_sex = dataframe["Vict Sex"].value_counts()
+
+    fig, ax = plt.subplots(subplot_kw=dict(aspect="equal"))
+
+    wedges, texts, autotexts = ax.pie(victims_sex.values[:-2],
+                                      autopct=lambda p: "{:.1f}% \n ({:d})".format(p, int(p*np.sum(victims_sex.values[:-2])/100)),
+                                      explode=[0.01, 0.01, 0.01])
+    plt.setp(autotexts, size=8, weight="bold")
+    ax.legend(wedges, ["Male", "Female", "Unknown"], title="Victim Gender",
+              loc="upper right", bbox_to_anchor=(0, 1))
+    ax.set_title("Gender of Victim")
+    # plt.show()
 
     # pd.set_option("display.max_columns", len(dataframe))
     # print(dataframe.head())
