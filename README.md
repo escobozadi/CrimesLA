@@ -2,4 +2,5 @@
 
 Data used in this repo can be found [here](https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8)
 
-![Mapping the crimes locations](/images/map_crimes.png)
+![Mapping the crimes locations](/images/map_crimes.png)  
+![Pie charts on crime victims descriptions](/images/victim_sex_race.png)
