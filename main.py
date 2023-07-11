@@ -83,10 +83,26 @@ class Visualizations(object):
         dataframe["Weapon Desc"] = dataframe["Weapon Desc"].replace("NO DATA", np.nan)
         dataframe["Weapon"] = dataframe["Weapon"].replace("NO DATA", np.nan)
 
-        fig, ax = plt.subplots()
-        ax.bar(dataframe["Weapon"].value_counts().keys()[:10],
-               list(dataframe["Weapon"].value_counts())[:10],
-               width=1, edgecolor="white", linewidth=0.7)
+        # Top weapons
+        # print(dataframe["Weapon"].value_counts().keys()[:10])
+        labels = ["BODILY FORCE", "UNKNOWN WEAPON", "VERBAL THREAT", "GUN",
+                  "KNIFE", "PISTOL", "FIREARM", "PEPPER SPRAY", "VEHICLE", "ROCK/THROWN OBJT"]
+        values = list(dataframe["Weapon"].value_counts())[:10]
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        # bar = ax.bar(dataframe["Weapon"].value_counts().keys()[:10],
+        #        list(dataframe["Weapon"].value_counts())[:10],
+        #        width=1, edgecolor="white", linewidth=0.7, color='maroon')
+        bar = ax.barh(labels, values, color='maroon')
+
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.xaxis.set_tick_params(pad=5)
+        ax.yaxis.set_tick_params(pad=10)
+
+        ax.set(xlabel="Number of Crimes", title="Top Weapons Used in LA Crimes")
+        ax.bar_label(bar, fontsize=8)
+
         plt.show()
 
     def gender_race(self):
