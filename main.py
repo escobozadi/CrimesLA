@@ -127,13 +127,13 @@ class Visualizations(object):
 
     @staticmethod
     def chart_percentage(pct, values):
+        # function to add the percentages & total to charts
         val = int(np.round(pct/100.*np.sum(values)))
         return f"{pct:.1f}% \n ({val:d})"
 
 
 if __name__ == '__main__':
-    # DataFrame: Crimes in LA from 2020 to July 2023
-    # 752910 entries
+    # DataFrame: Crimes in LA from 2020 to July 2023.     752910 entries
     file_path = "~/Documents/BedTracks/git_test/Crime_Data_from_2020_to_Present.csv"
     mo_codes = "~/Documents/BedTracks/git_test/MO_CODES_Numerical_20191119.csv"
     # Format csv of MO CODES
@@ -148,11 +148,10 @@ if __name__ == '__main__':
     # print(modus_operandi.head())
     # print(descent)
 
-    # victim_descent = pd.merge(dataframe, descent, how="left",
-    #                           left_on="Vict Descent", right_on="Descent Code")[["Descent Code", "Description"]]
-    #
-    # victims_sex = dataframe["Vict Sex"].value_counts()
-    # victims_descent = victim_descent["Description"].value_counts()
+    print(dataframe["Weapon Desc"].value_counts())
+    print(dataframe["Weapon Desc"].value_counts().keys()[:10])
+    print(list(dataframe["Weapon Desc"].value_counts())[:10])
+    print(sum(list(dataframe["Weapon Desc"].value_counts())[11:]))
 
     # pd.set_option("display.max_columns", len(dataframe))
     # print(dataframe.head())
