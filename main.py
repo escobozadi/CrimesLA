@@ -69,6 +69,26 @@ class Visualizations(object):
         self.mo_codes = mo_codes_df
         self.descent_df = descent_df
 
+    def weapons(self):
+        # Adding a new column of weapons to generalize descriptions
+        self.crime_df["Weapon Desc"] = self.crime_df["Weapon Desc"].replace(np.nan, "NO DATA")
+
+        self.crime_df["Weapon"] = self.crime_df["Weapon Desc"].copy()
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("GUN"), "Weapon"] = "GUN"
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("KNIFE"), "Weapon"] = "KNIFE"
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("RIFLE"), "Weapon"] = "RIFLE"
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("PISTOL"), "Weapon"] = "PISTOL"
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("FIREARM"), "Weapon"] = "FIREARM"
+        self.crime_df.loc[self.crime_df["Weapon Desc"].str.contains("SEMIAUTOMATIC ASSAULT WEAPON"), "Weapon"] = "SEMIAUTOMATIC ASSAULT WEAPON"
+        dataframe["Weapon Desc"] = dataframe["Weapon Desc"].replace("NO DATA", np.nan)
+        dataframe["Weapon"] = dataframe["Weapon"].replace("NO DATA", np.nan)
+
+        fig, ax = plt.subplots()
+        ax.bar(dataframe["Weapon"].value_counts().keys()[:10],
+               list(dataframe["Weapon"].value_counts())[:10],
+               width=1, edgecolor="white", linewidth=0.7)
+        plt.show()
+
     def gender_race(self):
         victims_sex = self.crime_df["Vict Sex"].value_counts()
 
@@ -109,7 +129,6 @@ class Visualizations(object):
         df = self.crime_df
         box = (df.LON.min(), df.LON[df.LON != 0].max(),
                df.LAT[df.LAT != 0].min(), df.LAT.max())
-        print(box)
 
         map_img = plt.imread("/Users/dianaescoboza/Documents/BedTracks/git_test/map.png")
         fig, ax = plt.subplots(figsize=(8, 7))
@@ -141,20 +160,13 @@ if __name__ == '__main__':
 
     # Read CSVs
     dataframe, modus_operandi, descent = data_tables(file_path, mo_codes)
-    viz = Visualizations(dataframe, modus_operandi, descent)
-
-    pd.set_option("display.max_columns", len(dataframe))
-    print(dataframe.head())
-    # print(modus_operandi.head())
-    # print(descent)
-
-    print(dataframe["Weapon Desc"].value_counts())
-    print(dataframe["Weapon Desc"].value_counts().keys()[:10])
-    print(list(dataframe["Weapon Desc"].value_counts())[:10])
-    print(sum(list(dataframe["Weapon Desc"].value_counts())[11:]))
-
     # pd.set_option("display.max_columns", len(dataframe))
-    # print(dataframe.head())
-    # map_locations(dataframe)
+    # pd.set_option("display.max_rows", len(dataframe["LAT"]))
     # pd.reset_option("display.max_columns")
+
+    # Visualizations
+    viz = Visualizations(dataframe, modus_operandi, descent)
+    # viz.map_locations()     # mapping crime locations
+    # viz.gender_race()       # gender and race pie charts
+    viz.weapons()
 
